@@ -67,7 +67,7 @@ void TuioServer::disablePeriodicMessages() {
 #ifdef WIN32
 	if( thread ) CloseHandle( thread );
 #endif
-	thread = NULL;	
+	thread = 0;	
 }
 
 void TuioServer::sendFullMessages() {
