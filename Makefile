@@ -6,7 +6,7 @@
 ENDIANESS=OSC_HOST_LITTLE_ENDIAN
 PLATFORM=$(shell uname)
 
-FRAMEWORKS = -lGL -lGLU -lglut
+FRAMEWORKS = -lGL -lGLU -lglut -lchilitags -lopencv_highgui
 
 SDL_CFLAGS  := $(shell sdl-config --cflags)
 SDL_LDFLAGS := $(shell sdl-config --libs)

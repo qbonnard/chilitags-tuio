@@ -23,55 +23,76 @@
 #define INCLUDED_SimpleSimulator_H
 
 #include "TuioServer.h"
-#include "TuioCursor.h"
-#include <list>
-#include <math.h>
+#include "TuioObject.h"
 
-#include <SDL.h>
-#include <SDL_thread.h>
-
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#include <GLUT/glut.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
-#endif
+#include <chilitags/DetectChilitags.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace TUIO;
 
 class SimpleSimulator { 
 	
 public:
-	SimpleSimulator(const char *host, int port);
+	SimpleSimulator(int xRes, int yRes, int cameraIndex, const char* host, int port);
 	~SimpleSimulator() {
 		delete tuioServer;
 	};
 	
 	void run();
-	TuioServer *tuioServer;
-	TuioCursor *cursor;
-	std::list<TuioCursor*> stickyCursorList;
-	
+
+	static const int firstTagId = 0;
+	static const int nTags = 1024;
+
+	class SmoothCoordinates {
+	public:
+		void init(float x, float y, float angle){
+			oldestPostion = 0;
+			for (unsigned int i=0; i<windowSize; ++i) {
+				xs[i]=x;
+				ys[i]=y;
+				angles[i]=angle;
+			}
+		}
+		void update(float x, float y, float angle){
+			oldestPostion %= windowSize;
+			xs[oldestPostion] = x;
+			ys[oldestPostion] = y;
+			angles[oldestPostion]=angle;
+			++oldestPostion;
+		}
+
+		float x() { return average(xs);}
+		float y() { return average(ys);}
+		float angle() { return average(angles);}
+
+	private:
+		static const unsigned int windowSize = 5;
+
+		unsigned int oldestPostion;
+		float xs[windowSize];
+		float ys[windowSize];
+		float angles[windowSize];
+
+		float average(float a[windowSize]){
+			float sum = 0.0f;
+			for (unsigned int i=0; i<windowSize; ++i) {
+				sum += a[i];
+			}
+			return sum/(float) windowSize;
+		}
+	};
+
 private:
-	void drawFrame();
-	void drawString(char *str);
-	void processEvents();
-	void toggleFullscreen();
-	SDL_Surface *window;
-	bool verbose, fullscreen, running;
+
+	TuioServer *tuioServer;
+	TuioObject *tuioObjects[nTags]; 
+	SmoothCoordinates coordinates[nTags];
 	
-	int width, height;
-	int screen_width, screen_height;
-	int window_width, window_height;
-	TuioTime currentTime;
-	
-	void mousePressed(float x, float y);
-	void mouseReleased(float x, float y);
-	void mouseDragged(float x, float y);
-	int s_id;
+	CvCapture *cvCapture;
+	int xRes;
+	int yRes;
+	IplImage *inputImage;
+	chilitags::DetectChilitags detectChilitags;
 };
 
 #endif /* INCLUDED_SimpleSimulator_H */
