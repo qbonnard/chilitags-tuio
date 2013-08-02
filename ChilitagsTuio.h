@@ -19,8 +19,8 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef INCLUDED_SimpleSimulator_H
-#define INCLUDED_SimpleSimulator_H
+#ifndef INCLUDED_ChilitagsTuio_H
+#define INCLUDED_ChilitagsTuio_H
 
 #include "TuioServer.h"
 #include "TuioObject.h"
@@ -30,11 +30,11 @@
 
 using namespace TUIO;
 
-class SimpleSimulator { 
+class ChilitagsTuio { 
 	
 public:
-	SimpleSimulator(int xRes, int yRes, int cameraIndex, const char* host, int port);
-	~SimpleSimulator() {
+	ChilitagsTuio(int xRes, int yRes, int cameraIndex, const char* host, int port);
+	~ChilitagsTuio() {
 		delete tuioServer;
 	};
 	
@@ -95,4 +95,4 @@ private:
 	chilitags::DetectChilitags detectChilitags;
 };
 
-#endif /* INCLUDED_SimpleSimulator_H */
+#endif /* INCLUDED_ChilitagsTuio_H */

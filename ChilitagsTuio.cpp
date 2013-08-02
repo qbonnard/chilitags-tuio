@@ -26,9 +26,9 @@
 */
 
 #include <chilitags/Chilitag.hpp>
-#include "SimpleSimulator.h"
+#include "ChilitagsTuio.h"
 
-SimpleSimulator::SimpleSimulator(int xRes, int yRes, int cameraIndex, const char* host, int port):
+ChilitagsTuio::ChilitagsTuio(int xRes, int yRes, int cameraIndex, const char* host, int port):
 cvCapture(cvCaptureFromCAM(cameraIndex)),
 xRes(xRes),
 yRes(yRes),
@@ -52,7 +52,7 @@ detectChilitags(&inputImage){
 	}
 }
 
-void SimpleSimulator::run() {
+void ChilitagsTuio::run() {
 	for (;;) {
 		inputImage = cvQueryFrame(cvCapture);
 		detectChilitags.update();
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 		port = atoi(argv[5]);
 	};
 	
-	SimpleSimulator(xRes, yRes, cameraIndex, host, port).run();
+	ChilitagsTuio(xRes, yRes, cameraIndex, host, port).run();
 
 	return 0;
 }

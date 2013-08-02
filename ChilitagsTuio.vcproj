@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="SimpleSimulator"
+	Name="ChilitagsTuio"
 	ProjectGUID="{810E065A-EC96-4C3F-8C8B-7EAE285DC797}"
 	Keyword="Win32Proj"
 	>
@@ -17,7 +17,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
-			IntermediateDirectory="Debug\SimpleSimulator"
+			IntermediateDirectory="Debug\ChilitagsTuio"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -62,13 +62,13 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glut32.lib opengl32.lib glu32.lib sdl.lib sdlmain.lib atlsd.lib ws2_32.lib winmm.lib msvcrtd.lib libcpmtd.lib"
-				OutputFile="$(OutDir)/SimpleSimulator.exe"
+				OutputFile="$(OutDir)/ChilitagsTuio.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=".\sdl\lib"
 				IgnoreAllDefaultLibraries="true"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/SimpleSimulator.pdb"
+				ProgramDatabaseFile="$(OutDir)/ChilitagsTuio.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -100,7 +100,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
-			IntermediateDirectory="Release\SimpleSimulator"
+			IntermediateDirectory="Release\ChilitagsTuio"
 			ConfigurationType="1"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
@@ -142,12 +142,12 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glut32.lib opengl32.lib glu32.lib sdl.lib sdlmain.lib atlsd.lib ws2_32.lib winmm.lib msvcrt.lib libcpmt.lib"
-				OutputFile="SimpleSimulator.exe"
+				OutputFile="ChilitagsTuio.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=".\sdl\lib"
 				IgnoreAllDefaultLibraries="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/SimpleSimulator.pdb"
+				ProgramDatabaseFile="$(OutDir)/ChilitagsTuio.pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -188,7 +188,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\SimpleSimulator.cpp"
+				RelativePath=".\ChilitagsTuio.cpp"
 				>
 			</File>
 			<Filter
@@ -230,7 +230,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\SimpleSimulator.h"
+				RelativePath=".\ChilitagsTuio.h"
 				>
 			</File>
 			<Filter

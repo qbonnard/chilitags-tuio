@@ -1,6 +1,4 @@
 *.o
 libTUIO.so
 libTUIO.a
-TuioDemo
-TuioDump
-SimpleSimulator
+ChilitagsTuio
