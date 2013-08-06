@@ -8,10 +8,6 @@ Dependencies
 
 This software depends on the [chilitags](https://github.com/chili-epfl/chilitags) library and OpenCV's `highgui` package.
 
-This package includes project files for Visual Studio .NET and XCode as well as a simple Linux Makefile for building the example applications.
-
-Pre-compiled binaries can be found on [Chili's Webpage](http://chili.epfl.ch/software). 
-
 
 Usage
 -----
@@ -40,7 +36,7 @@ You are welcome to manifest your interest in such features, or your own contribu
 Credits
 -------
 
-This software is based on the [TUIO C++ Reference Implementation](http://tuio.org/?software) and Demo Applications (Copyright 2005-2009 [Martin Kaltenbrunner](http://modin.yuri.at), which is part of [reacTIVision](http://reactivision.sourceforge.net), an open source fiducial tracking and multi-touch framework based on computer vision. 
+This software is based on the [TUIO C++ Reference Implementation](http://tuio.org/?software) and Demo Applications (Copyright 2005-2009 [Martin Kaltenbrunner](http://modin.yuri.at)), which is part of [reacTIVision](http://reactivision.sourceforge.net), an open source fiducial tracking and multi-touch framework based on computer vision. 
 
 This program uses the [oscpack](http://www.audiomulch.com/~rossb/code/oscpack/) OpenSound Control library.
 
@@ -60,6 +56,7 @@ We especially appreciate a reference in your paper, should you use Chilitags for
 
  * Chilitags: Robust Fiducial Markers for Augmented Reality. Q. Bonnard, G. Zufferey, A. Mazzei, S. Cuendet, N. Li, P. Dillenbourg. CHILI, EPFL, Switzerland. `http://chili.epfl.ch/`. 2013.
 
+```
 	@misc{chilitags,
 		title = {Chilitags: Robust Fiducial Markers for Augmented Reality.},
 		author={Bonnard, Quentin and Zufferey, Guillaume and Mazzei, Andrea and Cuendet, S\'{e}bastien and Li, Nan and Dillenbourg, Pierre},
@@ -67,3 +64,4 @@ We especially appreciate a reference in your paper, should you use Chilitags for
 		url={http://chili.epfl.ch/software},
 		year={2013}
 	}
+```
