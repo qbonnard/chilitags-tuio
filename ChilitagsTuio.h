@@ -32,8 +32,8 @@
 #include "TuioObject.h"
 #include "SmoothCoordinates.h"
 
-#include <chilitags/DetectChilitags.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <chilitags/chilitags.hpp>
 
 using namespace TUIO;
 
@@ -56,11 +56,13 @@ private:
 	TuioObject *tuioObjects[nTags]; 
 	SmoothCoordinates coordinates[nTags];
 	
-	CvCapture *cvCapture;
+	cv::VideoCapture *cvCapture;
 	int xRes;
 	int yRes;
-	IplImage *inputImage;
-	chilitags::DetectChilitags detectChilitags;
+	cv::Mat inputImage;
+
+	chilitags::Chilitags chilitags;
+	bool showOutputImage;
 };
 
 #endif /* INCLUDED_ChilitagsTuio_H */
