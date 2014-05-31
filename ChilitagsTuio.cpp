@@ -25,205 +25,168 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-
 #include "ChilitagsTuio.h"
 
-#include <stdio.h>
-#include <string.h>
-
-// Tuio server sends for every frame the id, the center position(between 0.0 and 1.0) and the angle(between 180.0 and 180.0) of the found tags
-ChilitagsTuio::ChilitagsTuio(int xRes, int yRes, int cameraIndex, const char* host, int port):
-cvCapture(NULL),
-xRes(xRes),
-yRes(yRes),
-showOutputImage(true)
+ChilitagsTuio::ChilitagsTuio(int xRes, int yRes, int cameraIndex, const std::string &host, int port, bool showFeedback):
+    tuioServer(host.c_str(), port),
+    cvCapture(cameraIndex),
+    showFeedback(showFeedback)
 {
-	if ((strcmp(host,"default")==0) && (port==0)) tuioServer = new TuioServer();
-	else tuioServer = new TuioServer(host, port);
-	
-	for (int tagId = firstTagId; tagId < firstTagId+nTags; ++tagId) {
-		tuioObjects[tagId] = NULL;
-	}
+    if (cvCapture.isOpened())
+    {
+#ifdef OPENCV3
+        cvCapture.set(cv::CAP_PROP_FRAME_WIDTH, xRes);
+        cvCapture.set(cv::CAP_PROP_FRAME_HEIGHT, yRes);
+#else
+        cvCapture.set(CV_CAP_PROP_FRAME_WIDTH, xRes);
+        cvCapture.set(CV_CAP_PROP_FRAME_HEIGHT, yRes);
+#endif
+    }
+    else {
+        // TODO: should actually quit the program...
+        std::cerr << "Unable to initialise video capture.\n";
+    }
 
-	
-	// The source of input images
-	cvCapture = new cv::VideoCapture(cameraIndex);
+    if (showFeedback) cv::namedWindow("ChilitagsTuio");
+}
 
-	// TODO: should actually quit the program...
-	if (!cvCapture->isOpened())
-	{
-		std::cerr << "Unable to initialise video capture." << std::endl;
-	}
+ChilitagsTuio::~ChilitagsTuio() {
+    if (showFeedback) cv::destroyWindow("ChilitagsTuio");
+    cvCapture.release();
+}
 
-	#ifdef OPENCV3
-	    cvCapture->set(cv::CAP_PROP_FRAME_WIDTH, xRes);
-	    cvCapture->set(cv::CAP_PROP_FRAME_HEIGHT, yRes);
-	#else
-	    cvCapture->set(CV_CAP_PROP_FRAME_WIDTH, xRes);
-	    cvCapture->set(CV_CAP_PROP_FRAME_HEIGHT, yRes);
-	#endif
+namespace {
+    // a helper function taking care of drawing the tags if a visual feedback
+    // is wanted
+    void drawFeedback(
+            cv::Mat inputImage,
+            const std::map<int, chilitags::Quad> &tags,
+            double processingTime) {
+        static const cv::Scalar COLOR(255, 0, 255);
 
+        cv::Mat outputImage = inputImage.clone();
 
-	// The detection is not perfect, so if a tag is not detected during one frame,
-	// the tag will shortly disappears, which results in flickering.
-	// To address this, Chilitags "cheats" by keeping tags for n frames
-	// at the same position. When tags disappear for more than 5 frames,
-	// Chilitags actually removes it.
-	// Here, we cancel this to show the raw detection results.
-	chilitags.setFilter(0, 0.);
+        for (auto tag : tags) {
 
-	cv::namedWindow("DisplayChilitags");
-	
+            // borders
+            const cv::Mat_<cv::Point2f> corners(tag.second);
+            for (size_t i = 0; i < 4; ++i) {
+                // sub-pixel precision drawing
+                static const int SHIFT = 16;
+                static const float PRECISION = 1<<SHIFT;
+                cv::line(
+                        outputImage,
+                        PRECISION*corners(i),
+                        PRECISION*corners((i+1)%4),
+                        COLOR, 1, CV_AA, SHIFT);
+            }
+
+            // tag ID
+            cv::Point2f center = 0.5*(corners(0) + corners(2));
+            cv::putText(outputImage, cv::format("%d", tag.first), center,
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, COLOR);
+        }
+
+        // resolution and processing time
+        cv::putText(outputImage,
+                cv::format("%dx%d %4.0f ms (press q to quit)",
+                    outputImage.cols, outputImage.rows,
+                    processingTime),
+                cv::Point(32,32),
+                cv::FONT_HERSHEY_SIMPLEX, 0.5, COLOR);
+
+        cv::imshow("ChilitagsTuio", outputImage);
+    }
 }
 
 void ChilitagsTuio::run() {
 
-	// Main loop, exiting when 'q is pressed'
-    	for (; 'q' != (char) cv::waitKey(1); ) {
-		
-		// Capture a new image.
-        	cvCapture->read(inputImage);
+    // Main loop, exiting when 'q is pressed'
+    // TODO: key are ignored when feedback is hidden
+    for (; 'q' != (char) cv::waitKey(1); ) {
 
-		tuioServer->initFrame(TuioTime::getSessionTime());
+        cvCapture.read(inputImage);
 
-		// Start measuring the time needed for the detection
-        	int64 startTime = cv::getTickCount();
+        int64 startTime = cv::getTickCount();
+        auto tags = chilitags.find(inputImage);
+        int64 endTime = cv::getTickCount();
+        double processingTime = 1000.0*((double) endTime - startTime)/cv::getTickFrequency();
 
-		// Detect tags on the current image;
-        	// The resulting map associates tag ids (between 0 and 1023)
-        	// to four 2D points corresponding to the corners positions
-        	// in the picture.
-        	std::map<int, chilitags::Quad> tags = chilitags.find(inputImage);
+        tuioServer.initFrame(TUIO::TuioTime::getSessionTime());
 
-        	// Measure the processing time needed for the detection
-        	int64 endTime = cv::getTickCount();
-        	double processingTime = 1000.0*((double) endTime - startTime)/cv::getTickFrequency();
+        // Handle detected tags
+        for (auto tag: tags) {
+            int tagId = tag.first;
+            const cv::Mat_<cv::Point2f> corners(tag.second);
+            cv::Point2f center = 0.5*(corners(0) + corners(2));
+            float x = center.x / (float) inputImage.cols;
+            float y = center.y / (float) inputImage.rows;
+            cv::Point2f topLine = corners(1)-corners(0);
+            float angle = std::atan2(topLine.y,topLine.x);
 
-		for (int tagId = firstTagId; tagId < firstTagId+nTags; ++tagId) 
-		{
-			TuioObject *tuioObject = tuioObjects[tagId];
+            auto tuioObject = tuioObjects.find(tagId);
+            if(tuioObject == tuioObjects.end()) {
+                // new chilitag has been detected
+                std::cout << "[NEW TAG]: id " << tagId << std::endl;
+                tuioObjects[tagId] = tuioServer.addTuioObject(tagId, x, y, angle);
+            }
+            else 
+            {
+                // chilitag already detected in the previous frame
+                std::cout << "[UPDATE TAG]: id " << tagId << " " << x << " " << y << " " << angle << std::endl;
+                tuioServer.updateTuioObject(tuioObject->second, x, y, angle);
+            }
+        }
 
-			std::map<int, chilitags::Quad>::iterator it = tags.find(tagId);
-			if(it != tags.end())
-			{
-				const cv::Mat_<cv::Point2f> corners(it->second);
-				cv::Point2f center = 0.5*(corners(0) + corners(2));
-				float x = center.x / (float) xRes;
-				float y = center.y / (float) yRes;
-				CvPoint2D32f topLine = corners(1)-corners(0);
-				float angle = std::atan2(topLine.y,topLine.x)*180.0/M_PI;
-				if(tuioObject == NULL) // new chilitag has been detected
-				{
-					coordinates[tagId].init(x, y, angle);
-					tuioObjects[tagId] = tuioServer->addTuioObject(tagId, x, y, angle);
-					std::cout << "[NEW TAG]: id " << tagId << std::endl;
-				}
-				else // chilitag already detected in the previous frame
-				{
-					coordinates[tagId].update(x, y, angle);
-					tuioServer->updateTuioObject(tuioObject,
-						coordinates[tagId].x(),
-						coordinates[tagId].y(),
-						coordinates[tagId].angle());
-					std::cout << "[UPDATE TAG]: id " << tagId << " " << coordinates[tagId].x() << " " << coordinates[tagId].y() << " " << coordinates[tagId].angle() << std::endl;
-				}
-			}
-			else if (tuioObject != NULL) { // chilitag not detected anymore
-				std::cout << "[REMOVE TAG]: id " << tagId << std::endl;
-				tuioServer->removeTuioObject(tuioObject);
-				tuioObjects[tagId] = NULL;
-			}
-		}
-		tuioServer->commitFrame();
+        // Remove disappeared tags
+        for (auto tuioObject = tuioObjects.begin(); tuioObject != tuioObjects.end(); ) {
+            if (tags.find(tuioObject->first) == tags.end()) {
+                // chilitag not detected anymore
+                std::cout << "[REMOVE TAG]: id " << tuioObject->first << std::endl;
+                tuioServer.removeTuioObject(tuioObject->second);
+                tuioObjects.erase(tuioObject++);
+            }
+            else {
+                ++tuioObject;
+            }
+        }
 
+        tuioServer.commitFrame();
 
-		// show image
-		if(showOutputImage)
-		{
-
-			// First, we set up some constants related to the information overlaid
-			// on the captured image
-			const static cv::Scalar COLOR(255, 0, 255);
-			// OpenCv can draw with sub-pixel precision with fixed point coordinates
-			static const int SHIFT = 16;
-			static const float PRECISION = 1<<SHIFT;
-
-			// We dont want to draw directly on the input image, so we clone it
-			cv::Mat outputImage = inputImage.clone();
-
-			for (const std::pair<int, chilitags::Quad> & tag : tags) {
-
-			    int id = tag.first;
-			    // We wrap the corner matrix into a datastructure that allows an
-			    // easy access to the coordinates
-			    const cv::Mat_<cv::Point2f> corners(tag.second);
-
-			    // We start by drawing the borders of the tag
-			    for (size_t i = 0; i < 4; ++i) {
-				cv::line(
-				    outputImage,
-				    PRECISION*corners(i),
-				    PRECISION*corners((i+1)%4),
-				    COLOR, 1, CV_AA, SHIFT);
-			    }
-
-			    // Other points can be computed from the four corners of the Quad.
-			    // Chilitags are oriented. It means that the points 0,1,2,3 of
-			    // the Quad coordinates are consistently the top-left, top-right,
-			    // bottom-right and bottom-left corners.
-			    // (i.e. clockwise, starting from top-left)
-			    // Using this, we can compute (an approximation of) the center of
-			    // tag.
-			    cv::Point2f center = 0.5*(corners(0) + corners(2));
-			    cv::putText(outputImage, cv::format("%d", id), center,
-				        cv::FONT_HERSHEY_SIMPLEX, 0.5, COLOR);
-			}
-
-			// Some stats on the current frame (resolution and processing time)
-			cv::putText(outputImage,
-				    cv::format("%dx%d %4.0f ms (press q to quit)",
-				               outputImage.cols, outputImage.rows,
-				               processingTime),
-				    cv::Point(32,32),
-				    cv::FONT_HERSHEY_SIMPLEX, 0.5, COLOR);
-
-			// Finally...
-			cv::imshow("DisplayChilitags", outputImage);
-		}
-
-	} 
-	cv::destroyWindow("DisplayChilitags");
-    	cvCapture->release();
+        if(showFeedback) drawFeedback(inputImage, tags, processingTime);
+    }
 }
 
 
 int main(int argc, char* argv[])
 {
-	if (( argc != 1) && ( argc != 3) && ( argc != 4)  && ( argc != 6) ) {
-        	std::cout << "usage: "<< argv[0] <<" [x-Cam-Resolution y-Cam-Resolution] [cameraIndex] [host port]\n";
-        	return 0;
-	}
+    if (( argc != 1) && ( argc != 3) && ( argc != 4)  && ( argc != 6) && ( argc != 7) ) {
+        std::cout << "usage: "<< argv[0] <<" [x-Cam-Resolution y-Cam-Resolution] [cameraIndex] [host port] [hideFeedback]\n";
+        return 0;
+    }
 
-	int xRes = 640;
-	int yRes = 480;
-	int cameraIndex = 0;
-	const char *host = "127.0.0.1";
-	int port = 3333;
-	if (argc >= 3) {
-		xRes = std::atoi(argv[1]);
-		yRes = std::atoi(argv[2]);
-	}
-	if (argc >= 4) {
-		cameraIndex = atoi(argv[3]);
-	}
-	if( argc == 6 ) {
-		host = argv[4];
-		port = atoi(argv[5]);
-	};
-	
-	ChilitagsTuio(xRes, yRes, cameraIndex, host, port).run();
+    int xRes = 640;
+    int yRes = 480;
+    int cameraIndex = 0;
+    std::string host = "127.0.0.1";
+    int port = 3333;
+    bool showFeedback = true;
+    if (argc >= 3) {
+        xRes = std::atoi(argv[1]);
+        yRes = std::atoi(argv[2]);
+    }
+    if (argc >= 4) {
+        cameraIndex = atoi(argv[3]);
+    }
+    if( argc >= 6 ) {
+        host = argv[4];
+        port = atoi(argv[5]);
+    };
+    if( argc == 7 ) {
+        showFeedback = false;
+    }
 
-	return 0;
+    ChilitagsTuio(xRes, yRes, cameraIndex, host, port, showFeedback).run();
+
+    return 0;
 }
-
-

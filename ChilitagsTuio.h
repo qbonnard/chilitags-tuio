@@ -28,41 +28,30 @@
 #ifndef INCLUDED_ChilitagsTuio_H
 #define INCLUDED_ChilitagsTuio_H
 
+#include <string>
 #include "TuioServer.h"
 #include "TuioObject.h"
-#include "SmoothCoordinates.h"
-
 #include <opencv2/highgui/highgui.hpp>
 #include <chilitags/chilitags.hpp>
-
-using namespace TUIO;
 
 class ChilitagsTuio { 
 	
 public:
-	ChilitagsTuio(int xRes, int yRes, int cameraIndex, const char* host, int port);
-	~ChilitagsTuio() {
-		delete tuioServer;
-	};
+	ChilitagsTuio(int xRes, int yRes, int cameraIndex, const std::string &host, int port, bool showFeedback);
+	~ChilitagsTuio();
 	
 	void run();
 
-	static const int firstTagId = 0;
-	static const int nTags = 1024;
-
 private:
 
-	TuioServer *tuioServer;
-	TuioObject *tuioObjects[nTags]; 
-	SmoothCoordinates coordinates[nTags];
+	TUIO::TuioServer tuioServer;
+	std::map<int, TUIO::TuioObject *> tuioObjects; 
 	
-	cv::VideoCapture *cvCapture;
-	int xRes;
-	int yRes;
+	cv::VideoCapture cvCapture;
 	cv::Mat inputImage;
 
 	chilitags::Chilitags chilitags;
-	bool showOutputImage;
+	bool showFeedback;
 };
 
 #endif /* INCLUDED_ChilitagsTuio_H */

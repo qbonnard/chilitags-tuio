@@ -6,12 +6,12 @@
 ENDIANESS=OSC_HOST_LITTLE_ENDIAN
 PLATFORM=$(shell uname)
 
-FRAMEWORKS = -lchilitags -lopencv_highgui
+FRAMEWORKS = -lchilitags -lopencv_core -lopencv_highgui
 
 CHILITAGS_TUIO = ChilitagsTuio
 
 INCLUDES = -I./TUIO -I./oscpack
-CFLAGS  = -Wall -O3 
+CFLAGS  = -Wall -O3 -std=c++11
 #CFLAGS  = -g -Wall -O3 
 CXXFLAGS = $(CFLAGS) $(INCLUDES) -D$(ENDIANESS)
 

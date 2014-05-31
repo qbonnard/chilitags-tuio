@@ -6,13 +6,13 @@ This software is an application sending TUIO messages describing the Chilitags f
 Dependencies
 ------------
 
-This software depends on the [chilitags](https://github.com/chili-epfl/chilitags) library and OpenCV's `highgui` package.
+This software depends on the [chilitags](https://github.com/chili-epfl/chilitags) library and OpenCV's `highgui` and `core` package.
 
 
 Usage
 -----
 
-    chilitags-tuio [x-cam-resolution y-cam-resolution] [camera-index] [host port]
+    chilitags-tuio [x-cam-resolution y-cam-resolution] [camera-index] [host port] [hideFeedback]
 
 *x-cam-resolution y-cam-resolution* are the resolution parameters to give to the camera.
 The default resolution is 640x480 pixels.
@@ -24,12 +24,14 @@ If multiple cameras are attached to the computer, you can select them by increas
 *host port* are the parameters to configure the connection between the tuio server and clients.
 The defaults value correspond to the port 3333 on `localhost`.
 
+*hideFeedback* if there is a 6th parameter (any) no video feedback will be shown
+
 Shortcomings
 ------------
 
 The TUIO messages sent by this software describe chilitags as `2D Objects`, which means that they provide their identifier, position, orientation, speed, acceleration, rotational speed and rotational acceleration.
 
-The TUIO messages do not contain the scale, width and height of the chilitags, even though they would be easily computed. Furthermore, assuming the user is willing to provide calibratiojn information, the chilitags could be defined in 3D too, albeit with a low precision on the depth.
+The TUIO messages do not contain the scale, width and height of the chilitags, even though they would be easily computed. It would be similarly easy to send messages describind the tags in 3D, given that the 3D estimation is built in Chilitags.
 
 You are welcome to manifest your interest in such features, or your own contribution implementing them!
 
@@ -43,7 +45,7 @@ This program uses the [oscpack](http://www.audiomulch.com/~rossb/code/oscpack/) 
 License
 -------
 
-Chilitags is released under the GPL.
+Chilitags Tuio Server is released under the GPL.
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.  
 
@@ -54,12 +56,14 @@ You should have received a copy of the GNU General Public License along with thi
 
 We especially appreciate a reference in your paper, should you use Chilitags for a research project. Let us make that easy for you:
 
- * Chilitags: Robust Fiducial Markers for Augmented Reality. Q. Bonnard, G. Zufferey, A. Mazzei, S. Cuendet, N. Li, P. Dillenbourg. CHILI, EPFL, Switzerland. `http://chili.epfl.ch/`. 2013.
+ * Chilitags: Robust Fiducial Markers for Augmented Reality. Q. Bonnard, S.
+ Lemaignan, G.  Zufferey, A. Mazzei, S. Cuendet, N. Li, P. Dillenbourg.
+ CHILI, EPFL, Switzerland. `http://chili.epfl.ch/software`. 2013.
 
 ```
 	@misc{chilitags,
-		title = {Chilitags: Robust Fiducial Markers for Augmented Reality.},
-		author={Bonnard, Quentin and Zufferey, Guillaume and Mazzei, Andrea and Cuendet, S\'{e}bastien and Li, Nan and Dillenbourg, Pierre},
+		title = {Chilitags 2: Robust Fiducial Markers for Augmented Reality and Robotics.},
+		author={Bonnard, Quentin and Lemaignan, S\'{e}verin and Zufferey, Guillaume and Mazzei, Andrea and Cuendet, S\'{e}bastien and Li, Nan and Dillenbourg, Pierre},
 		publisher={CHILI, EPFL, Switzerland},
 		url={http://chili.epfl.ch/software},
 		year={2013}
